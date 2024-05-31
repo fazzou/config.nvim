@@ -374,7 +374,7 @@ require('lazy').setup({
       local builtin = require 'telescope.builtin'
       vim.keymap.set('n', '<leader>sh', builtin.help_tags, { desc = '[S]earch [H]elp' })
       vim.keymap.set('n', '<leader>sk', builtin.keymaps, { desc = '[S]earch [K]eymaps' })
-      vim.keymap.set('n', '<leader>sf', builtin.find_files, { desc = '[S]earch [F]iles' })
+      vim.keymap.set('n', '<leader>sf', builtin.git_files, { desc = '[S]earch [F]iles' })
       vim.keymap.set('n', '<leader>ss', builtin.builtin, { desc = '[S]earch [S]elect Telescope' })
       vim.keymap.set('n', '<leader>sw', builtin.grep_string, { desc = '[S]earch current [W]ord' })
       vim.keymap.set('n', '<leader>sg', builtin.live_grep, { desc = '[S]earch by [G]rep' })
@@ -405,6 +405,8 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>sn', function()
         builtin.find_files { cwd = vim.fn.stdpath 'config' }
       end, { desc = '[S]earch [N]eovim files' })
+
+      vim.keymap.set('n', '<leader>o', '<CMD>Oil<CR>', { desc = 'Open parent directory with [o]il' })
     end,
   },
 
@@ -886,6 +888,32 @@ require('lazy').setup({
   --  Uncomment the following line and add your plugins to `lua/custom/plugins/*.lua` to get going.
   --    For additional information, see `:help lazy.nvim-lazy.nvim-structuring-your-plugins`
   -- { import = 'custom.plugins' },
+  {
+    'scalameta/nvim-metals',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+    },
+    ft = { 'scala', 'sbt', 'java' },
+    opts = function()
+      local metals_config = require('metals').bare_config()
+      metals_config.on_attach = function(client, bufnr)
+        -- your on_attach function
+      end
+
+      return metals_config
+    end,
+    config = function(self, metals_config)
+      local nvim_metals_group = vim.api.nvim_create_augroup('nvim-metals', { clear = true })
+      vim.api.nvim_create_autocmd('FileType', {
+        pattern = self.ft,
+        callback = function()
+          require('metals').initialize_or_attach(metals_config)
+        end,
+        group = nvim_metals_group,
+      })
+    end,
+  },
+  { 'stevearc/oil.nvim', opts = {} },
 }, {
   ui = {
     -- If you are using a Nerd Font: set icons to an empty table which will use the
